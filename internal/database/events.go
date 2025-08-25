@@ -5,28 +5,28 @@ import (
 	"context"
 	"time"
 )
-
+ 
 type EventModel struct {
-	DB *sql.DB
+ 	DB *sql.DB
 }
 
 
 type Event struct {
-	Id		int 	`json:"id"`
-	OwnerID int     `json:"ownerID" binding:"required"`
-	Name 	string	`json:"name" binding:"required, min=3"`
-	Description string `json:"description" binding:"required, min=10"`
-	Date 	string 	`json:"date" binding:"required, datetime=2006-01-02"`
-	Location string `json:"location" binding:"required, min=3"`
+	Id			int 		`json:"id"`
+	OwnerID 	int     	`json:"ownerID" binding:"required"`
+	Name 		string		`json:"name" binding:"required,min=3"`
+	Description string  	`json:"description" binding:"required,min=10"`
+	Date 		string 		`json:"date" binding:"required,datetime=2006-01-02"`
+	Location 	string 		`json:"location" binding:"required,min=3"`
 }
 
-func (m *EventModel) Insert(event Event) error {
+func (m *EventModel) Insert(event *Event) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	
-	query := "INSERT INTO events (owner_id, name, description, date, location) VALUES ($1, $2, $3, $4, $5"
+	query := "INSERT INTO events (owner_id, name, description, date, location) VALUES ($1, $2, $3, $4, $5) RETURNING id"
 
-	return m.DB.QueryRowContext(ctx, query, event.OwnerID, event.Description, event.Date, event.Location).Scan(&event.Id)
+	return m.DB.QueryRowContext(ctx, query, event.OwnerID, event.Name, event.Description, event.Date, event.Location).Scan(&event.Id)
 }
 
 func (m *EventModel) GetAll() ([]*Event, error) {
@@ -81,7 +81,7 @@ func (m *EventModel) Get(id int) (*Event, error) {
 	
 }
 
-func (m *EventModel) Update(event Event) error {
+func (m *EventModel) Update(event *Event) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
