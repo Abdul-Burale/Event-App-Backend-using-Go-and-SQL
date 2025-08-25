@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 	"strconv"
+	"log"
 
 	"github.com/Abdul-Burale/Event-App-Backend-using-Go-and-SQL/internal/database"
 	"github.com/gin-gonic/gin"
@@ -12,11 +13,13 @@ func (app *application) CreateEvent(c *gin.Context) {
 	var event database.Event
 	if err := c.ShouldBindJSON(&event); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
 	err := app.models.Events.Insert(&event)
 
 	if err != nil {
+		log.Println("Insert error:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create event"})
 		return
 	}
@@ -29,6 +32,7 @@ func (app *application) getAllEvents(c *gin.Context) {
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retreive events"})
+		return
 	}
 
 	c.JSON(http.StatusOK, events)
@@ -39,15 +43,18 @@ func (app *application) getEvent(c *gin.Context) {
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid event ID"})
+		return
 	}
 
 	event, err := app.models.Events.Get(id)
 	if event == nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retreive event"})
+		return
 	}
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve event"})
+		return
 	}
 
 	c.JSON(http.StatusOK, event)
@@ -58,15 +65,18 @@ func (app *application) updateEvent(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid event ID"})
+		return
 	}
 
 	existingEvent, err := app.models.Events.Get(id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve event"})
+		return
 	}
 
 	if existingEvent == nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Event not found"})
+		return
 	}
 
 	updatedEvent := &database.Event{}
@@ -93,10 +103,12 @@ func (app *application) deleteEvent(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"Error": "Invalid event ID"})
+		return
 	}
 
 	if err := app.models.Events.Delete(id); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete event"})
+		return
 	}
 
 	c.JSON(http.StatusNoContent, nil)
